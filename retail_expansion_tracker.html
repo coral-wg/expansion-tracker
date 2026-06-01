@@ -5,290 +5,265 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Retail Expansion Tracker</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  :root {
-    --bg-primary:#ffffff;--bg-secondary:#f5f5f3;--bg-tertiary:#eeede9;
-    --text-primary:#1a1a18;--text-secondary:#6b6b67;
-    --border:rgba(0,0,0,0.1);--border-md:rgba(0,0,0,0.18);
-    --radius-md:8px;--radius-lg:12px;
-    --blue:#185FA5;--green:#3B6D11;--amber:#854F0B;
+  :root{
+    --bg:#f5f4ef;--card:#ffffff;--card-2:#fafaf7;
+    --text:#1a1a18;--muted:#6b6b67;--faint:#9a9994;
+    --border:rgba(0,0,0,0.08);--border-md:rgba(0,0,0,0.16);
+    --radius:10px;--radius-lg:14px;
+    --blr:#378ADD;--roka:#1D9E75;--kl:#7F77DD;--aptl:#D85A30;--tn:#A56E2D;
+    --on-track:#2F7A2C;--warn:#B8782C;--off-track:#B23B3B;
   }
-  @media(prefers-color-scheme:dark){
-    :root{--bg-primary:#1e1e1c;--bg-secondary:#2a2a28;--bg-tertiary:#232321;
-    --text-primary:#f0efeb;--text-secondary:#9a9994;
-    --border:rgba(255,255,255,0.1);--border-md:rgba(255,255,255,0.18);
-    --blue:#85B7EB;--green:#97C459;--amber:#EF9F27;}
-  }
+  @media(prefers-color-scheme:dark){:root{--bg:#161614;--card:#1f1f1c;--card-2:#1a1a17;--text:#f0efeb;--muted:#9a9994;--faint:#6b6b67;--border:rgba(255,255,255,0.08);--border-md:rgba(255,255,255,0.16);}}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg-tertiary);color:var(--text-primary);font-size:14px}
-  .page{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
-  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem}
-  .header h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
-  .header p{font-size:12px;color:var(--text-secondary);margin-top:5px}
-  .refresh-btn{display:flex;align-items:center;gap:6px;font-size:13px;padding:7px 14px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-primary);cursor:pointer;color:var(--text-secondary)}
-  .refresh-btn:hover{background:var(--bg-secondary)}
-  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.5rem}
-  .kpi{background:var(--bg-primary);border-radius:var(--radius-md);padding:14px 16px;border:0.5px solid var(--border)}
-  .kpi-label{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
-  .kpi-value{font-size:28px;font-weight:600;line-height:1}
-  .kpi-sub{font-size:11px;color:var(--text-secondary);margin-top:4px}
-  .kpi.blue .kpi-value{color:var(--blue)}.kpi.green .kpi-value{color:var(--green)}.kpi.amber .kpi-value{color:var(--amber)}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased}
+  .page{max-width:1180px;margin:0 auto;padding:1.75rem 1.5rem 3rem}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:'tnum'}
+
+  /* Header */
+  .header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap}
+  .header h1{font-size:22px;font-weight:600;letter-spacing:-0.01em;display:flex;align-items:center;gap:10px}
+  .header .live-tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:500;color:#2F7A2C;background:#E6F0DC;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.05em}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:#2F7A2C;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .header .sub{font-size:12px;color:var(--muted);margin-top:5px}
+  .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:7px 14px;border:0.5px solid var(--border-md);border-radius:var(--radius);background:var(--card);cursor:pointer;color:var(--text);transition:background .15s}
+  .btn:hover{background:var(--card-2)}
+  .btn i{font-size:14px}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1.25rem}
+  .kpi{background:var(--card);border-radius:var(--radius);padding:14px 16px;border:0.5px solid var(--border)}
+  .kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;font-weight:500}
+  .kpi-value{font-size:26px;font-weight:600;line-height:1;letter-spacing:-0.02em}
+  .kpi-sub{font-size:11px;color:var(--muted);margin-top:5px}
+  .kpi.hero{background:linear-gradient(135deg,#1a4d80 0%,#185FA5 100%);color:#fff;border:none}
+  .kpi.hero .kpi-label,.kpi.hero .kpi-sub{color:rgba(255,255,255,0.75)}
+  .kpi.warn .kpi-value{color:var(--off-track)}
+
+  /* Cards */
+  .card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.4rem;margin-bottom:12px}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.1rem;gap:1rem;flex-wrap:wrap}
+  .card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:flex;align-items:center;gap:6px}
+  .card-subtitle{font-size:12px;color:var(--faint);margin-top:3px}
+  .card h2{font-size:16px;font-weight:600;letter-spacing:-0.01em}
+
+  /* AOP Readiness */
+  .aop-row{display:grid;grid-template-columns:130px 70px 90px 80px 1fr 100px;gap:14px;align-items:center;padding:11px 0;border-top:0.5px solid var(--border);font-size:13px}
+  .aop-row.head{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;border-top:none;padding-bottom:6px;font-weight:500}
+  .aop-row .reg{font-weight:500;display:flex;align-items:center;gap:8px}
+  .reg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+  .aop-row .num{text-align:right}
+  .progress{position:relative;height:8px;background:rgba(0,0,0,0.05);border-radius:4px;overflow:hidden}
+  .progress-fill{height:100%;border-radius:4px;transition:width .5s}
+  .progress-target{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--text);opacity:0.4}
+  .status-pill{font-size:11px;font-weight:500;padding:2px 9px;border-radius:10px;text-align:center;display:inline-block}
+  .pill-on{background:#E6F0DC;color:#2F7A2C}
+  .pill-warn{background:#F8EBD3;color:#8C5A0F}
+  .pill-off{background:#F8DDDD;color:#9C2727}
+  @media(prefers-color-scheme:dark){
+    .progress{background:rgba(255,255,255,0.07)}
+    .pill-on{background:#1C3A12;color:#9BC57B}
+    .pill-warn{background:#3D2B0C;color:#E5B96A}
+    .pill-off{background:#3D1414;color:#E89898}
+  }
+
+  /* Funnel */
+  .funnel{padding:0}
+  .funnel-toolbar{display:flex;gap:6px;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+  .toggle-grp{display:flex;background:var(--card-2);border:0.5px solid var(--border);border-radius:var(--radius);padding:2px}
+  .toggle{font-size:11px;padding:4px 10px;border:none;background:transparent;cursor:pointer;color:var(--muted);border-radius:6px;font-weight:500}
+  .toggle.active{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,0.06)}
+  .legend{display:flex;gap:14px;font-size:11px;margin-left:auto;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:5px;color:var(--muted)}
+  .legend-dot{width:10px;height:10px;border-radius:2px}
+  .funnel-row{display:grid;grid-template-columns:130px 1fr 70px;gap:14px;align-items:center;padding:8px 0;font-size:13px}
+  .funnel-row .stage-name{color:var(--text);font-weight:500;display:flex;align-items:center;gap:6px}
+  .stage-arrow{color:var(--faint);font-size:10px}
+  .funnel-bar{display:flex;height:24px;background:rgba(0,0,0,0.025);border-radius:4px;overflow:hidden;position:relative}
+  @media(prefers-color-scheme:dark){.funnel-bar{background:rgba(255,255,255,0.03)}}
+  .funnel-seg{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;transition:width .4s;min-width:0;overflow:hidden;cursor:default}
+  .funnel-seg[data-w="0"]{display:none}
+  .funnel-count{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+  .funnel-empty .stage-name{color:var(--faint)}
+  .funnel-empty .funnel-count{color:var(--faint);font-weight:400}
+
+  /* Two-col layout */
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-  .card{background:var(--bg-primary);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem}
-  .card-title{font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:14px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.04em}
-  .region-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}
-  .region-name{width:95px;font-size:12px;flex-shrink:0}
-  .bar-wrap{flex:1;height:8px;background:var(--bg-secondary);border-radius:4px;overflow:hidden}
-  .bar-fill{height:100%;border-radius:4px}
-  .region-open{width:28px;text-align:right;font-weight:600}
-  .region-pipe{width:28px;text-align:right;font-size:11px;color:var(--text-secondary)}
-  .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .status-chip{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--radius-md);font-size:13px}
-  .fy-wrap,.donut-wrap{position:relative;width:100%;height:180px}
-  .donut-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-  .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-  .filter-btn{font-size:12px;padding:4px 10px;border:0.5px solid var(--border-md);border-radius:20px;background:transparent;cursor:pointer;color:var(--text-secondary);transition:all .15s}
-  .filter-btn.active{background:#185FA5;color:#fff;border-color:#185FA5}
+
+  /* Off-funnel + attention */
+  .flag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+  .flag{padding:14px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--card-2)}
+  .flag-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:500;display:flex;align-items:center;gap:5px;margin-bottom:4px}
+  .flag-value{font-size:22px;font-weight:600;line-height:1}
+  .flag-sub{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.3}
+
+  .attn-list{margin-top:6px;max-height:200px;overflow-y:auto}
+  .attn-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px;gap:8px}
+  .attn-row:last-child{border-bottom:none}
+  .attn-name{font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .attn-meta{display:flex;gap:6px;align-items:center;flex-shrink:0}
+  .attn-empty{padding:20px;text-align:center;color:var(--faint);font-size:12px}
+
+  /* Directory */
   .search-wrap{position:relative;margin-bottom:10px}
-  .search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-size:15px}
-  .search-wrap input{width:100%;font-size:13px;padding:7px 12px 7px 32px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none}
-  .search-wrap input:focus{border-color:#185FA5}
-  .table-wrap{max-height:340px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius-md)}
+  .search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+  .search-wrap input{width:100%;font-size:13px;padding:8px 12px 8px 34px;border:0.5px solid var(--border-md);border-radius:var(--radius);background:var(--card-2);color:var(--text);outline:none}
+  .search-wrap input:focus{border-color:var(--blr)}
+  .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .filter-btn{font-size:11px;padding:4px 10px;border:0.5px solid var(--border-md);border-radius:20px;background:transparent;cursor:pointer;color:var(--muted)}
+  .filter-btn.active{background:var(--blr);color:#fff;border-color:var(--blr)}
+  .table-wrap{max-height:360px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius)}
   table{width:100%;border-collapse:collapse;font-size:12px}
-  thead th{font-size:11px;color:var(--text-secondary);font-weight:600;padding:8px 10px;border-bottom:0.5px solid var(--border);text-align:left;position:sticky;top:0;background:var(--bg-primary);text-transform:uppercase;letter-spacing:.03em}
-  tbody td{padding:8px 10px;border-bottom:0.5px solid var(--border)}
-  tbody tr:hover td{background:var(--bg-secondary)}
-  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
-  .b-open{background:#EAF3DE;color:#3B6D11}.b-closed{background:#FCEBEB;color:#A32D2D}
-  .b-exploring{background:#E6F1FB;color:#185FA5}.b-planned{background:#EEEDFE;color:#534AB7}
-  .b-recce{background:#FAEEDA;color:#854F0B}.b-work{background:#E1F5EE;color:#0F6E56}
-  .b-site{background:#FBEAF0;color:#993556}.b-hold{background:#F1EFE8;color:#5F5E5A}
-  .b-dropped{background:#FCEBEB;color:#793636}.b-token{background:#FAEEDA;color:#633806}
-  .b-launch{background:#EAF3DE;color:#27500A}
-  .live-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#3B6D11;background:#EAF3DE;padding:2px 8px;border-radius:10px;margin-left:8px}
-  .live-dot{width:6px;height:6px;border-radius:50%;background:#3B6D11;animation:pulse 2s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  @media(max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+  thead th{font-size:10px;color:var(--muted);font-weight:600;padding:9px 11px;border-bottom:0.5px solid var(--border);text-align:left;position:sticky;top:0;background:var(--card);text-transform:uppercase;letter-spacing:0.04em;z-index:1}
+  tbody td{padding:9px 11px;border-bottom:0.5px solid var(--border)}
+  tbody tr:hover td{background:var(--card-2)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500}
+  .b-open{background:#E6F0DC;color:#2F7A2C}
+  .b-closed{background:#F8DDDD;color:#9C2727}
+  .b-exploring{background:#E1EEF9;color:#1A5A8F}
+  .b-planned{background:#E9E7FA;color:#4B43A8}
+  .b-recce{background:#F8EBD3;color:#8C5A0F}
+  .b-work{background:#DCEFE7;color:#0E6650}
+  .b-site{background:#F7E5EB;color:#8A2F4C}
+  .b-hold{background:#EEEDE7;color:#5A5955}
+  .b-dropped{background:#F8DDDD;color:#6E3030}
+  .b-token{background:#F8EBD3;color:#5E3404}
+  .b-deposit{background:#DCEFE7;color:#14533A}
+  .b-launch{background:#E6F0DC;color:#1F4308}
+  .b-short{background:#E1EEF9;color:#163F66}
+  .p-pill{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;letter-spacing:0.02em}
+  .p1{background:#F8DDDD;color:#9C2727}
+  .p2{background:#EEEDE7;color:#5A5955}
+  @media(prefers-color-scheme:dark){
+    .b-open{background:#1C3A12;color:#9BC57B}
+    .b-closed{background:#3D1414;color:#E89898}
+    .b-exploring{background:#0E2A45;color:#7DB5E0}
+    .b-planned{background:#1F1B45;color:#9990D8}
+    .b-recce{background:#3D2B0C;color:#E5B96A}
+    .b-work{background:#0E332A;color:#7BC5A8}
+    .b-site{background:#3D1525;color:#D88EA8}
+    .b-hold{background:#2A2925;color:#A09F9A}
+    .b-dropped{background:#3D1414;color:#C68080}
+    .b-token{background:#3D2B0C;color:#D8A56A}
+    .b-deposit{background:#0E332A;color:#7BC5A8}
+    .b-launch{background:#1C3A12;color:#9BC57B}
+    .b-short{background:#0E2A45;color:#7DB5E0}
+    .p1{background:#3D1414;color:#E89898}
+    .p2{background:#2A2925;color:#A09F9A}
+  }
+
+  /* Footer */
+  .footnote{font-size:11px;color:var(--faint);margin-top:1rem;text-align:center;line-height:1.5}
+
+  @media(max-width:880px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .two-col{grid-template-columns:1fr}
+    .aop-row{grid-template-columns:1fr 60px 70px 1fr 90px;font-size:12px;gap:8px}
+    .aop-row > *:nth-child(2){display:none}
+    .funnel-row{grid-template-columns:100px 1fr 50px;font-size:12px}
+    .flag-grid{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
 <div class="page">
+
+  <!-- Header -->
   <div class="header">
     <div>
       <h1><i class="ti ti-building-store"></i> Retail Expansion Tracker <span class="live-tag"><span class="live-dot"></span>Live</span></h1>
-      <p id="as-of">Loading…</p>
+      <div class="sub" id="as-of">Loading…</div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="refresh-btn" onclick="tryLiveRefresh()"><i class="ti ti-refresh"></i> Refresh from Sheet</button>
-      <button class="refresh-btn" onclick="document.getElementById('paste-modal').style.display='flex'" title="Paste CSV manually"><i class="ti ti-clipboard-data"></i> Paste CSV</button>
+    <button class="btn" onclick="tryLiveRefresh()"><i class="ti ti-refresh"></i> Refresh</button>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpis" id="kpis"></div>
+
+  <!-- AOP Readiness (hero) -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>FY27 AOP Readiness</h2>
+        <div class="card-subtitle" id="aop-subtitle">Active pipeline (Exploring through Launch Ready) vs region target</div>
+      </div>
+    </div>
+    <div id="aop-readiness"></div>
+  </div>
+
+  <!-- Funnel -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>Pipeline Funnel</h2>
+        <div class="card-subtitle">FY27 branches by current stage, segmented by region</div>
+      </div>
+      <div class="funnel-toolbar">
+        <div class="toggle-grp">
+          <button class="toggle active" id="t-all" onclick="setPrio('All')">All</button>
+          <button class="toggle" id="t-p1" onclick="setPrio('P1')">P1 only</button>
+          <button class="toggle" id="t-p2" onclick="setPrio('P2')">P2 only</button>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+    <div id="funnel"></div>
+  </div>
+
+  <!-- Two-col: Off-funnel + Attention -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><div><h2>Off-Funnel</h2><div class="card-subtitle">Not counted toward AOP</div></div></div>
+      <div class="flag-grid" id="off-funnel"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2>P1 Attention Items</h2><div class="card-subtitle">High-priority branches in early stages</div></div></div>
+      <div class="attn-list" id="attention"></div>
     </div>
   </div>
 
-  <!-- Paste CSV modal -->
-  <div id="paste-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center">
-    <div style="background:var(--bg-primary);border-radius:var(--radius-lg);padding:1.5rem;width:560px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-        <h3 style="font-size:15px;font-weight:600">Paste CSV data</h3>
-        <button onclick="document.getElementById('paste-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-secondary)">×</button>
-      </div>
-      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">In Google Sheets: <strong>File → Download → CSV</strong>, open the file in Notepad, select all (Ctrl+A), copy, and paste below.</p>
-      <textarea id="csv-paste" placeholder="Paste CSV content here…" style="width:100%;height:180px;font-size:11px;font-family:monospace;padding:8px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);resize:vertical"></textarea>
-      <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
-        <button onclick="document.getElementById('paste-modal').style.display='none'" class="refresh-btn">Cancel</button>
-        <button onclick="loadFromPaste()" style="padding:7px 16px;background:#185FA5;color:#fff;border:none;border-radius:var(--radius-md);font-size:13px;cursor:pointer;font-weight:500">Load data</button>
-      </div>
-    </div>
-  </div>
-  <div class="kpis" id="kpis"></div>
-  <div class="two-col">
-    <div class="card"><div class="card-title"><i class="ti ti-map-pin"></i> Open branches by region</div><div id="region-bars"></div></div>
-    <div class="card"><div class="card-title"><i class="ti ti-stack"></i> Pipeline status breakdown</div><div class="status-grid" id="status-grid"></div></div>
-  </div>
-  <div class="two-col">
-    <div class="card"><div class="card-title"><i class="ti ti-chart-bar"></i> Branches opened per fiscal year</div><div class="fy-wrap"><canvas id="fy-chart"></canvas></div></div>
-    <div class="card"><div class="card-title"><i class="ti ti-chart-donut"></i> Open branches by state</div><div class="donut-wrap"><canvas id="donut-chart"></canvas></div><div class="donut-legend" id="donut-legend"></div></div>
-  </div>
-  <div class="card" style="margin-top:12px">
-    <div class="card-title"><i class="ti ti-list"></i> Branch directory</div>
+  <!-- Directory -->
+  <div class="card">
+    <div class="card-head"><div><h2>Branch Directory</h2><div class="card-subtitle"><span id="dir-count">All</span> branches</div></div></div>
     <div class="search-wrap"><i class="ti ti-search"></i><input type="text" id="search" placeholder="Search branch, region or state…" oninput="renderTable()"></div>
     <div class="filter-bar" id="filter-bar"></div>
-    <div class="table-wrap"><table><thead><tr><th>Branch</th><th>Region</th><th>State</th><th>Status</th><th>FY</th><th>Opening date</th></tr></thead><tbody id="table-body"></tbody></table></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Branch</th><th>Region</th><th>Priority</th><th>Status</th><th>FY</th><th>Opening</th></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footnote">
+    Recommended next step: add a <strong>stage-entry date</strong> column to the sheet to unlock velocity tracking and stuck-flagging.
   </div>
 </div>
+
 <script>
-// ── EMBEDDED DATA (as of 26 May 2025) ──────────────────────────────────────
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTKctdrpAMEWN-mLwO88ULHmhRqv057F86H7AMtg105ioPU2jrjYjWSoldNnCG1hdPxx48QZ-K6npSU/pub?gid=0&single=true&output=csv';
+
+const REGION_MAP = {'Bengaluru':'Bengaluru','Rest of KA':'Rest of KA','Kerala':'Kerala','Andhra':'AP & TL','Telangana':'AP & TL','Tamil Nadu':'Tamil Nadu'};
+const AOP_REGIONS = ['Bengaluru','Rest of KA','Kerala','AP & TL','Tamil Nadu'];
+const AOP_TARGETS = {'Bengaluru':10,'Rest of KA':10,'Kerala':20,'AP & TL':25,'Tamil Nadu':30};
+const REGION_COLORS = {'Bengaluru':'#378ADD','Rest of KA':'#1D9E75','Kerala':'#7F77DD','AP & TL':'#D85A30','Tamil Nadu':'#A56E2D'};
+const FUNNEL_STAGES = ['Exploring','Planned','Recce','Shortlisted','Site Finalised','Token Paid','Deposit Paid','Work Started','Launch Ready'];
+const OFF_FUNNEL = ['On Hold','Dropped','Closed'];
+const TARGET_FY = 'FY 2026-27';
+const CURRENT_FY = 'FY 2025-26';
+
+let allBranches=[], activeFilter='All', activePrio='All';
+
+// ── EMBEDDED FALLBACK (priority included) ──────────────────────────────────
 const EMBEDDED = [
-  {n:'INDIRANAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'22/05/2017'},
-  {n:'JALAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'30/05/2017'},
-  {n:'MALLESHWARAM',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'03/06/2017'},
-  {n:'K R PURAM',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'01/07/2017'},
-  {n:'BOMMANAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'18/09/2017'},
-  {n:'KENGERI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'23/11/2017'},
-  {n:'KATRIGUPPE',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'02/12/2017'},
-  {n:'KL-EDAPPALLY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2018-19',od:'01/01/2019'},
-  {n:'KL-IRINJALAKUDA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2018-19',od:'01/01/2019'},
-  {n:'KL-THRISSUR',s:'Closed',r:'Kerala',st:'Kerala',fy:'FY 2018-19',od:''},
-  {n:'KL-MUVATTUPUZHA',s:'Closed',r:'Kerala',st:'Kerala',fy:'FY 2019-20',od:''},
-  {n:'KL-THOPPUMPADY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2019-20',od:'01/06/2019'},
-  {n:'KORAMANGALA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'30/06/2020'},
-  {n:'JAYANAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'05/10/2020'},
-  {n:'SUNKADAKATTE',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'21/10/2020'},
-  {n:'BASAWESHWARANAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'24/10/2020'},
-  {n:'LINGARAJPURAM',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'15/03/2021'},
-  {n:'JP NAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2021-22',od:'28/08/2021'},
-  {n:'KL-CHAVAKKAD',s:'Closed',r:'Kerala',st:'Kerala',fy:'FY 2022-23',od:''},
-  {n:'KL-CHERTHALA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2022-23',od:'01/06/2022'},
-  {n:'KAIKONDRAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2022-23',od:'06/01/2023'},
-  {n:'HOSA ROAD',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2022-23',od:'23/03/2023'},
-  {n:'HOSAKOTE',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'13/04/2023'},
-  {n:'NAGARBHAVI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'26/07/2023'},
-  {n:'MARATHAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'28/07/2023'},
-  {n:'YELAHANKA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'04/08/2023'},
-  {n:'WHITE FIELD',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'26/10/2023'},
-  {n:'MATHIKERE',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'30/10/2023'},
-  {n:'UTTARAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'14/03/2024'},
-  {n:'KOLAR',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2023-24',od:'23/03/2024'},
-  {n:'KODIGEHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'20/05/2024'},
-  {n:'MYSURU',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'29/05/2024'},
-  {n:'SARJAPURA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'21/06/2024'},
-  {n:'TC PALYA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'22/06/2024'},
-  {n:'TUMKUR',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'24/06/2024'},
-  {n:'VAJRAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'25/06/2024'},
-  {n:'HASSAN',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'06/08/2024'},
-  {n:'ULLAL',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'06/08/2024'},
-  {n:'THANISANDRA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'07/08/2024'},
-  {n:'CHIKMAGALURU',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'04/10/2024'},
-  {n:'MANGALORE',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'04/10/2024'},
-  {n:'ADUGODI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'05/10/2024'},
-  {n:'HUBLI',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'05/10/2024'},
-  {n:'DAVANAGERE',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'11/12/2024'},
-  {n:'SHIVAMOGGA',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'11/12/2024'},
-  {n:'DEVANAHALLI',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'15/03/2025'},
-  {n:'UDUPI',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'02/04/2025'},
-  {n:'AP-VIJAYAWADA',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'07/05/2025'},
-  {n:'AP-GUNTUR',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'08/05/2025'},
-  {n:'AP-TIRUPATHI',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'30/05/2025'},
-  {n:'KL-CHAVAKKAD (New)',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'18/06/2025'},
-  {n:'TS-AS RAO NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'30/07/2025'},
-  {n:'TS-KUKATPALLY',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'30/07/2025'},
-  {n:'TS-PANJAGUTTA',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'30/07/2025'},
-  {n:'AP-RAMATALKIES',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'07/08/2025'},
-  {n:'AP-NAD',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'07/08/2025'},
-  {n:'AP-RAJAMAHENDRAVARAM',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'07/08/2025'},
-  {n:'Vellara Junction',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2025-26',od:'09/08/2025'},
-  {n:'KL-VENNALA-BY-PASS',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'22/08/2025'},
-  {n:'KL-PALA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'28/08/2025'},
-  {n:'MANDYA',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'30/08/2025'},
-  {n:'KL-THODUPUZHA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'30/08/2025'},
-  {n:'KL-THRIPPUNITHURA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'11/09/2025'},
-  {n:'KL-KOTTAYAM',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'18/09/2025'},
-  {n:'KL-THIRUVANANTHAPURAM MGROAD',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'20/09/2025'},
-  {n:'KL-KESHAVADASAPURAM',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'20/09/2025'},
-  {n:'KL-NEYATINKARA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'20/09/2025'},
-  {n:'KL-KAYAMKULAM',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'02/10/2025'},
-  {n:'KL-KARUNAGAPALLY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'02/10/2025'},
-  {n:'KL-KADAPPAKKADA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'02/10/2025'},
-  {n:'KL-ADOOR',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'04/10/2025'},
-  {n:'KL-Thiruvalla',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'04/10/2025'},
-  {n:'KL-Palakkad',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'06/10/2025'},
-  {n:'KL-Ottapalam',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'06/10/2025'},
-  {n:'TS-DILSUKH NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'11/10/2025'},
-  {n:'TS-HIMAYAT NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'11/10/2025'},
-  {n:'TS-TOLI CHOWKI',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'11/10/2025'},
-  {n:'BANNERGHATTA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2025-26',od:'25/10/2025'},
-  {n:'SADASHIVA NAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2025-26',od:'25/10/2025'},
-  {n:'CHITRADURGA',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'25/10/2025'},
-  {n:'KL-VARKALA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'29/10/2025'},
-  {n:'HOSPETE',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'07/11/2025'},
-  {n:'VIJAYAPURA',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'07/11/2025'},
-  {n:'BELAGAVI',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'28/11/2025'},
-  {n:'AP-Nellore',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'10/12/2025'},
-  {n:'AP-Ongole',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'10/12/2025'},
-  {n:'AP-KAKINADA',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'11/12/2025'},
-  {n:'AP-GAJUWAKA',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'12/12/2025'},
-  {n:'KL-VADAKARA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'16/12/2025'},
-  {n:'KL-KANNUR',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'17/12/2025'},
-  {n:'AP-ANANTAPUR',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'17/12/2025'},
-  {n:'AP-KURNOOL',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'17/12/2025'},
-  {n:'KL-PERINTHALMANNA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'18/12/2025'},
-  {n:'KL-CALICUT',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'02/01/2026'},
-  {n:'TS-CHANDA NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'03/01/2026'},
-  {n:'TS-LB NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'03/01/2026'},
-  {n:'KL-THAMARASSERY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'03/01/2026'},
-  {n:'KL-MALAPPURAM',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'13/01/2026'},
-  {n:'KL-KOTTAKKAL',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'14/01/2026'},
-  {n:'KL-EDAPPAL',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'15/01/2026'},
-  {n:'KL-THRISSUR (new)',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'12/01/2026'},
-  {n:'KL-MUVATTUPUZHA (New)',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'23/02/2026'},
-  {n:'KL-KOYILANDY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'25/02/2026'},
-  {n:'KL-Kanhangad',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'26/02/2026'},
-  {n:'KL-Tirur',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'11/03/2026'},
-  {n:'KL-Kalpetta',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:'01/04/2026'},
-  {n:'KL-Cherthala (new)',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:'16/04/2026'},
-  {n:'Warrangal',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:'06/05/2026'},
-  {n:'Khammam',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:'18/05/2026'},
-  {n:'Nizamabad',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:'TBC'},
-  // Pipeline - Bengaluru
-  {n:'Attibele',s:'On Hold',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'E-City',s:'Recce',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Nelmangala',s:'Work Started',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Annekal',s:'On Hold',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Kanakapura',s:'Work Started',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Chikballapur',s:'Exploring',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Dodballapur',s:'Exploring',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'HSR Layout',s:'Recce',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Kadubeesanahalli',s:'Exploring',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Hennur Road',s:'Recce',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Vidyaranyapura',s:'Recce',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Tiptur',s:'Exploring',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
-  // Pipeline - Rest of KA
-  {n:'Gulbarga',s:'Site Finalised',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Raichur',s:'Site Finalised',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Bagalkote',s:'Token Paid',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Dharwad',s:'Work Started',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Karwar',s:'Planned',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Sirsi',s:'Dropped',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
-  {n:'Madikeri',s:'Dropped',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
-  // Pipeline - Kerala
-  {n:'Angamali',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Chalakudi',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Aluva',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Perimbavur',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Ernakulam - kadavanthara',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Ernakulam - Palarivattom Junction',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Attingel',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Kazhakootam',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Nedumangad',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Kottarakara',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Punalur',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Ranni',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Aluapuzha',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Mavelikara',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Changanassery',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Kattapana',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Pattambi',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  {n:'Manjeri',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
-  // Pipeline - Telangana
-  {n:'Karimnagar',s:'Recce',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:''},
-  {n:'Uppal hyderabad',s:'Planned',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:''},
-  {n:'Suchitra hyderabad',s:'Planned',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:''},
-  {n:'Mahabubnagar',s:'Planned',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:''},
-  // Pipeline - Andhra Pradesh
-  {n:'Anakapalle',s:'Planned',r:'Andhra',st:'AP & Telangana',fy:'FY 2026-27',od:''},
-  {n:'Chittoor',s:'Site Finalised',r:'Andhra',st:'AP & Telangana',fy:'FY 2026-27',od:''},
-  {n:'Vijayawada 2',s:'Site Finalised',r:'Andhra',st:'AP & Telangana',fy:'FY 2026-27',od:''},
-  {n:'Vizianagaram',s:'Planned',r:'Andhra',st:'AP & Telangana',fy:'FY 2026-27',od:''},
+  {n:'INDIRANAGAR',s:'Open',p:'',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'22/05/2017'},
+  {n:'KL-EDAPPALLY',s:'Open',p:'',r:'Kerala',st:'Kerala',fy:'FY 2018-19',od:'01/01/2019'},
+  // ... real data loaded via CSV; embedded is minimal fallback
 ];
 
-function toRow(d){return{'Branch Name':d.n,'Status':d.s,'Region':d.r,'State':d.st,'Year':d.fy,'Opening date':d.od,'AOP planned':d.od};}
-
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTKctdrpAMEWN-mLwO88ULHmhRqv057F86H7AMtg105ioPU2jrjYjWSoldNnCG1hdPxx48QZ-K6npSU/pub?gid=0&single=true&output=csv';
-let allBranches = [], activeFilter = 'All';
-let fyChart, donutChart;
-const RC = {'Bengaluru':'#378ADD','Rest of KA':'#1D9E75','Kerala':'#7F77DD','Andhra':'#D85A30','Telangana':'#BA7517','Tamil Nadu':'#888780'};
-const SS = {'Open':['#EAF3DE','#3B6D11'],'Closed':['#FCEBEB','#A32D2D'],'Exploring':['#E6F1FB','#185FA5'],'Planned':['#EEEDFE','#534AB7'],'Recce':['#FAEEDA','#854F0B'],'Work Started':['#E1F5EE','#0F6E56'],'Site Finalised':['#FBEAF0','#993556'],'On Hold':['#F1EFE8','#5F5E5A'],'Dropped':['#FCEBEB','#793636'],'Token Paid':['#FAEEDA','#633806'],'Launch Ready':['#EAF3DE','#27500A']};
-
+// ── CSV PARSE ──────────────────────────────────────────────────────────────
 function splitCsvLine(line){
   const cols=[];let cur='',inQ=false;
   for(const ch of line){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}
@@ -297,15 +272,12 @@ function splitCsvLine(line){
 }
 function parseCsv(text){
   const lines=text.trim().split('\n');
-  // Find header row - look for row containing 'Branch Name'
   let headerIdx=0;
   for(let i=0;i<Math.min(10,lines.length);i++){
     if(lines[i].toLowerCase().includes('branch name')){headerIdx=i;break;}
   }
   let headers=splitCsvLine(lines[headerIdx]);
-  // Find which column index 'Branch Name' is in (may be offset by leading blank col)
   const bnIdx=headers.findIndex(h=>h.toLowerCase().trim()==='branch name');
-  // If Branch Name is not at index 0, slice headers from that offset
   if(bnIdx>0) headers=headers.slice(bnIdx);
   return lines.slice(headerIdx+1).map(line=>{
     let cols=splitCsvLine(line);
@@ -315,53 +287,152 @@ function parseCsv(text){
   }).filter(r=>r['Branch Name']&&r['Branch Name'].trim()&&r['Branch Name']!=='Branch Name');
 }
 
-function bc(s){const m={'Open':'b-open','Closed':'b-closed','Exploring':'b-exploring','Planned':'b-planned','Recce':'b-recce','Work Started':'b-work','Site Finalised':'b-site','On Hold':'b-hold','Dropped':'b-dropped','Token Paid':'b-token','Launch Ready':'b-launch'};return m[s]||'b-hold';}
-
-function render(data){
-  const open=data.filter(d=>d.Status==='Open').length;
-  const pipe=data.filter(d=>!['Open','Closed',''].includes(d.Status)).length;
-  const closed=data.filter(d=>d.Status==='Closed').length;
-  const regions=new Set(data.filter(d=>d.Status==='Open').map(d=>d.Region)).size;
-  document.getElementById('kpis').innerHTML=`
-    <div class="kpi blue"><div class="kpi-label">Open branches</div><div class="kpi-value">${open}</div></div>
-    <div class="kpi green"><div class="kpi-label">Pipeline</div><div class="kpi-value">${pipe}</div><div class="kpi-sub">In progress</div></div>
-    <div class="kpi"><div class="kpi-label">Open + pipeline</div><div class="kpi-value">${open+pipe}</div></div>
-    <div class="kpi"><div class="kpi-label">Regions active</div><div class="kpi-value">${regions}</div></div>
-    <div class="kpi amber"><div class="kpi-label">Closed</div><div class="kpi-value">${closed}</div></div>`;
-  // Region bars
-  const od=data.filter(d=>d.Status==='Open'),pd=data.filter(d=>!['Open','Closed',''].includes(d.Status));
-  const regs=[...new Set(data.map(d=>d.Region).filter(Boolean))];
-  const cnt={};regs.forEach(r=>cnt[r]={o:0,p:0});
-  od.forEach(d=>{if(cnt[d.Region])cnt[d.Region].o++;});
-  pd.forEach(d=>{if(cnt[d.Region])cnt[d.Region].p++;});
-  const sorted=regs.filter(r=>cnt[r].o>0||cnt[r].p>0).sort((a,b)=>cnt[b].o-cnt[a].o);
-  const max=Math.max(...sorted.map(r=>cnt[r].o));
-  document.getElementById('region-bars').innerHTML=sorted.map(r=>`<div class="region-row"><span class="region-name">${r}</span><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(cnt[r].o/max*100)}%;background:${RC[r]||'#888'}"></div></div><span class="region-open">${cnt[r].o}</span><span class="region-pipe">+${cnt[r].p}</span></div>`).join('');
-  // Status grid
-  const pc=data.filter(d=>!['Open','Closed',''].includes(d.Status));
-  const sc={};pc.forEach(d=>{sc[d.Status]=(sc[d.Status]||0)+1;});
-  document.getElementById('status-grid').innerHTML=Object.entries(sc).sort((a,b)=>b[1]-a[1]).map(([s,n])=>{const[bg,fg]=SS[s]||['#eee','#333'];return`<div class="status-chip" style="background:${bg}"><span style="font-weight:500;color:${fg}">${s}</span><span style="font-weight:600;font-size:16px;color:${fg}">${n}</span></div>`;}).join('');
-  // FY chart
-  const fyc={};od.filter(d=>d.Year).forEach(d=>{fyc[d.Year]=(fyc[d.Year]||0)+1;});
-  const fyl=Object.keys(fyc).sort(),fyv=fyl.map(l=>fyc[l]);
-  if(fyChart)fyChart.destroy();
-  fyChart=new Chart(document.getElementById('fy-chart'),{type:'bar',data:{labels:fyl.map(l=>l.replace('FY ','')),datasets:[{label:'Branches',data:fyv,backgroundColor:'#378ADD',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:45},grid:{display:false}},y:{ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.1)'}}}}});
-  // Donut
-  const dc={};od.forEach(d=>{const s=d.State||'Other';dc[s]=(dc[s]||0)+1;});
-  const dl=Object.keys(dc).sort((a,b)=>dc[b]-dc[a]),dv=dl.map(l=>dc[l]);
-  const colors=['#378ADD','#7F77DD','#1D9E75','#D85A30','#BA7517','#888780'];
-  if(donutChart)donutChart.destroy();
-  donutChart=new Chart(document.getElementById('donut-chart'),{type:'doughnut',data:{labels:dl,datasets:[{data:dv,backgroundColor:colors.slice(0,dl.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'60%'}});
-  document.getElementById('donut-legend').innerHTML=dl.map((l,i)=>`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary)"><span style="width:8px;height:8px;border-radius:2px;background:${colors[i]||'#ccc'};display:inline-block"></span>${l} <strong>${dv[i]}</strong></span>`).join('');
-  // Filters
-  const ps=[...new Set(data.filter(d=>!['Open','Closed',''].includes(d.Status)).map(d=>d.Status))];
-  const statuses=['All','Open',...ps,'Closed'];
-  document.getElementById('filter-bar').innerHTML=statuses.map(s=>`<button class="filter-btn${activeFilter===s?' active':''}" onclick="setFilter('${s}')">${s}</button>`).join('');
-  renderTable();
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function aopRegion(d){return REGION_MAP[d.Region]||d.Region;}
+function isActivePipeline(d){return FUNNEL_STAGES.includes(d.Status);}
+function targetFY(d){return d.Year===TARGET_FY;}
+function pipelineForAOP(data,prioFilter){
+  return data.filter(d=>targetFY(d) && isActivePipeline(d) && matchesPrio(d,prioFilter));
+}
+function matchesPrio(d,p){
+  if(p==='All')return true;
+  if(p==='P1')return d.Priority==='P1';
+  if(p==='P2')return d.Priority==='P2'||!d.Priority;
+  return true;
+}
+function bc(s){
+  const m={'Open':'b-open','Closed':'b-closed','Exploring':'b-exploring','Planned':'b-planned',
+    'Recce':'b-recce','Work Started':'b-work','Site Finalised':'b-site','On Hold':'b-hold',
+    'Dropped':'b-dropped','Token Paid':'b-token','Deposit Paid':'b-deposit','Launch Ready':'b-launch',
+    'Shortlisted':'b-short'};
+  return m[s]||'b-hold';
 }
 
-function setFilter(f){activeFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===f));renderTable();}
+// ── KPI STRIP ──────────────────────────────────────────────────────────────
+function renderKPIs(data){
+  const open=data.filter(d=>d.Status==='Open').length;
+  const fyOpen=data.filter(d=>d.Status==='Open' && d.Year===CURRENT_FY).length;
+  const aopTotal=Object.values(AOP_TARGETS).reduce((a,b)=>a+b,0);
+  const pipeline=pipelineForAOP(data,'All').length;
+  const gap=aopTotal-pipeline;
+  const gapColor=gap<=0?'on-track':gap<=15?'warn':'off-track';
+  const gapLabel=gap<=0?`+${Math.abs(gap)} over plan`:`${gap} branches short`;
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Open today</div><div class="kpi-value num">${open}</div><div class="kpi-sub">${fyOpen} opened this FY</div></div>
+    <div class="kpi hero"><div class="kpi-label">FY27 AOP target</div><div class="kpi-value num">+${aopTotal}</div><div class="kpi-sub">New branches</div></div>
+    <div class="kpi"><div class="kpi-label">Active pipeline</div><div class="kpi-value num">${pipeline}</div><div class="kpi-sub">${Math.round(pipeline/aopTotal*100)}% of target</div></div>
+    <div class="kpi ${gap>15?'warn':''}"><div class="kpi-label">Gap to AOP</div><div class="kpi-value num">${gap<=0?'✓':gap}</div><div class="kpi-sub">${gapLabel}</div></div>
+    <div class="kpi"><div class="kpi-label">FY at risk</div><div class="kpi-value num">${gap>15?'Yes':'No'}</div><div class="kpi-sub">${gap>15?'Pipeline below plan':'Pipeline tracking'}</div></div>`;
+}
 
+// ── AOP READINESS ──────────────────────────────────────────────────────────
+function renderAOPReadiness(data){
+  const openByReg={},pipeByReg={};
+  AOP_REGIONS.forEach(r=>{openByReg[r]=0;pipeByReg[r]=0;});
+  data.filter(d=>d.Status==='Open').forEach(d=>{
+    const r=aopRegion(d);if(openByReg[r]!==undefined)openByReg[r]++;
+  });
+  pipelineForAOP(data,'All').forEach(d=>{
+    const r=aopRegion(d);if(pipeByReg[r]!==undefined)pipeByReg[r]++;
+  });
+  const head=`<div class="aop-row head">
+    <div>Region</div><div class="num">Open</div><div class="num">Pipeline</div><div class="num">Target</div><div>Progress</div><div style="text-align:right">Status</div>
+  </div>`;
+  const rows=AOP_REGIONS.map(r=>{
+    const open=openByReg[r],pipe=pipeByReg[r],target=AOP_TARGETS[r];
+    const pct=Math.min(100,Math.round(pipe/target*100));
+    const gap=target-pipe;
+    let pillCls,pillText;
+    if(gap<=0){pillCls='pill-on';pillText='On track';}
+    else if(pct>=70){pillCls='pill-warn';pillText=`-${gap} short`;}
+    else{pillCls='pill-off';pillText=`-${gap} short`;}
+    return `<div class="aop-row">
+      <div class="reg"><span class="reg-dot" style="background:${REGION_COLORS[r]}"></span>${r}</div>
+      <div class="num">${open}</div>
+      <div class="num"><strong>${pipe}</strong></div>
+      <div class="num" style="color:var(--muted)">${target}</div>
+      <div><div class="progress"><div class="progress-fill" style="width:${pct}%;background:${REGION_COLORS[r]}"></div></div></div>
+      <div style="text-align:right"><span class="status-pill ${pillCls}">${pillText}</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('aop-readiness').innerHTML=head+rows;
+}
+
+// ── FUNNEL ─────────────────────────────────────────────────────────────────
+function renderFunnel(data){
+  const pipe=pipelineForAOP(data,activePrio);
+  const stageData=FUNNEL_STAGES.map(stage=>{
+    const items=pipe.filter(d=>d.Status===stage);
+    const byReg={};AOP_REGIONS.forEach(r=>byReg[r]=0);
+    items.forEach(d=>{const r=aopRegion(d);if(byReg[r]!==undefined)byReg[r]++;});
+    return {stage,total:items.length,byReg};
+  });
+  const max=Math.max(...stageData.map(s=>s.total),1);
+  document.getElementById('funnel').innerHTML=stageData.map((s,i)=>{
+    const isLast=i===FUNNEL_STAGES.length-1;
+    const empty=s.total===0;
+    const segs=AOP_REGIONS.map(r=>{
+      const n=s.byReg[r];
+      if(n===0)return '';
+      const w=(n/max)*100;
+      return `<div class="funnel-seg" data-w="${n}" style="width:${w}%;background:${REGION_COLORS[r]}" title="${r}: ${n}">${n>=2?n:''}</div>`;
+    }).join('');
+    return `<div class="funnel-row ${empty?'funnel-empty':''}">
+      <div class="stage-name">${s.stage}${!isLast?' <span class="stage-arrow">↓</span>':''}</div>
+      <div class="funnel-bar">${segs}</div>
+      <div class="funnel-count">${s.total||'—'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('legend').innerHTML=AOP_REGIONS.map(r=>
+    `<span class="legend-item"><span class="legend-dot" style="background:${REGION_COLORS[r]}"></span>${r}</span>`
+  ).join('');
+}
+
+// ── OFF-FUNNEL ─────────────────────────────────────────────────────────────
+function renderOffFunnel(data){
+  const counts={'On Hold':[],'Dropped':[],'Closed':[]};
+  data.forEach(d=>{if(counts[d.Status])counts[d.Status].push(d);});
+  const flags=[
+    {label:'On Hold',icon:'pause',count:counts['On Hold'].length,sub:'Temporarily paused — review for reactivation'},
+    {label:'Dropped',icon:'x',count:counts['Dropped'].length,sub:'Cancelled — backfill needed if AOP-relevant'},
+    {label:'Closed',icon:'arrow-down',count:counts['Closed'].length,sub:'Operational branches shut down'}
+  ];
+  document.getElementById('off-funnel').innerHTML=flags.map(f=>`
+    <div class="flag">
+      <div class="flag-label"><i class="ti ti-${f.icon}"></i>${f.label}</div>
+      <div class="flag-value num">${f.count}</div>
+      <div class="flag-sub">${f.sub}</div>
+    </div>`).join('');
+}
+
+// ── P1 ATTENTION ───────────────────────────────────────────────────────────
+function renderAttention(data){
+  const earlyStages=['Exploring','Planned','Recce','Shortlisted'];
+  const items=data.filter(d=>targetFY(d)&&d.Priority==='P1'&&earlyStages.includes(d.Status));
+  if(items.length===0){
+    document.getElementById('attention').innerHTML=`<div class="attn-empty">No P1 items stuck in early stages.</div>`;
+    return;
+  }
+  document.getElementById('attention').innerHTML=items.map(d=>`<div class="attn-row">
+    <span class="attn-name">${d['Branch Name']}</span>
+    <span class="attn-meta">
+      <span class="reg-dot" style="background:${REGION_COLORS[aopRegion(d)]||'#999'}"></span>
+      <span style="color:var(--muted);font-size:11px">${aopRegion(d)}</span>
+      <span class="badge ${bc(d.Status)}">${d.Status}</span>
+    </span>
+  </div>`).join('');
+}
+
+// ── DIRECTORY ──────────────────────────────────────────────────────────────
+function renderFilters(data){
+  const pipeS=[...new Set(data.filter(d=>FUNNEL_STAGES.includes(d.Status)).map(d=>d.Status))]
+    .sort((a,b)=>FUNNEL_STAGES.indexOf(a)-FUNNEL_STAGES.indexOf(b));
+  const statuses=['All','Open',...pipeS,...OFF_FUNNEL];
+  document.getElementById('filter-bar').innerHTML=statuses.map(s=>
+    `<button class="filter-btn${activeFilter===s?' active':''}" onclick="setFilter('${s}')">${s}</button>`
+  ).join('');
+}
+function setFilter(f){activeFilter=f;renderFilters(allBranches);renderTable();}
 function renderTable(){
   const q=(document.getElementById('search').value||'').toLowerCase();
   const rows=allBranches.filter(d=>{
@@ -369,56 +440,71 @@ function renderTable(){
     const mq=!q||d['Branch Name'].toLowerCase().includes(q)||(d.Region||'').toLowerCase().includes(q)||(d.State||'').toLowerCase().includes(q);
     return ms&&mq;
   });
-  document.getElementById('table-body').innerHTML=rows.map(d=>`<tr><td style="font-weight:500">${d['Branch Name']}</td><td>${d.Region||'—'}</td><td>${d.State||'—'}</td><td><span class="badge ${bc(d.Status)}">${d.Status||'—'}</span></td><td>${d.Year||'—'}</td><td>${d['Opening date']||d['AOP planned']||'—'}</td></tr>`).join('');
+  document.getElementById('dir-count').textContent=`${rows.length} of ${allBranches.length}`;
+  document.getElementById('table-body').innerHTML=rows.map(d=>{
+    const pri=d.Priority?`<span class="p-pill ${d.Priority==='P1'?'p1':'p2'}">${d.Priority}</span>`:'';
+    return `<tr>
+      <td style="font-weight:500">${d['Branch Name']}</td>
+      <td>${aopRegion(d)||'—'}</td>
+      <td>${pri||'—'}</td>
+      <td><span class="badge ${bc(d.Status)}">${d.Status||'—'}</span></td>
+      <td style="color:var(--muted)">${d.Year||'—'}</td>
+      <td style="color:var(--muted)">${d['Opening date']||d['AOP planned']||'—'}</td>
+    </tr>`;
+  }).join('');
 }
 
-function loadFromPaste(){
-  const txt = document.getElementById('csv-paste').value.trim();
-  if(!txt){alert('Please paste some CSV content first.');return;}
-  try{
-    const parsed = parseCsv(txt);
-    if(!parsed.length || !parsed[0]['Branch Name']){alert('Could not read the CSV — make sure you copied from the Branch Roll out sheet.');return;}
-    allBranches = parsed;
-    const now = new Date();
-    document.getElementById('as-of').textContent = `Updated from pasted CSV · ${now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
-    document.getElementById('paste-modal').style.display = 'none';
-    document.getElementById('csv-paste').value = '';
-    render(allBranches);
-  }catch(e){alert('Error reading CSV: '+e.message);}
+// ── PRIORITY TOGGLE ────────────────────────────────────────────────────────
+function setPrio(p){
+  activePrio=p;
+  ['All','P1','P2'].forEach(x=>document.getElementById('t-'+x.toLowerCase()).classList.toggle('active',x===p));
+  renderFunnel(allBranches);
 }
 
+// ── MASTER RENDER ──────────────────────────────────────────────────────────
+function renderAll(data){
+  renderKPIs(data);
+  renderAOPReadiness(data);
+  renderFunnel(data);
+  renderOffFunnel(data);
+  renderAttention(data);
+  renderFilters(data);
+  renderTable();
+}
+
+// ── DATA LOADERS ───────────────────────────────────────────────────────────
 function loadEmbedded(){
-  allBranches=EMBEDDED.map(toRow);
-  document.getElementById('as-of').textContent='Data as of 26 May 2025 · Click "Refresh from Sheet" for live data';
-  render(allBranches);
+  allBranches=EMBEDDED.map(d=>({'Branch Name':d.n,'Status':d.s,'Priority':d.p,'Region':d.r,'State':d.st,'Year':d.fy,'Opening date':d.od}));
+  document.getElementById('as-of').textContent='Embedded fallback data · click Refresh to fetch live';
+  renderAll(allBranches);
 }
-
 async function tryLiveRefresh(){
   document.getElementById('as-of').textContent='Fetching live data…';
-  const encoded = encodeURIComponent(CSV_URL);
+  const encoded=encodeURIComponent(CSV_URL);
   const proxies=[
     `https://corsproxy.io/?url=${encoded}`,
     `https://api.allorigins.win/raw?url=${encoded}`,
     `https://api.codetabs.com/v1/proxy?quest=${encoded}`,
-    `https://proxy.cors.sh/${CSV_URL}`,
   ];
   for(const proxy of proxies){
     try{
       const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
       if(!r.ok)continue;
       const txt=await r.text();
-      if(!txt.includes('Branch Name'))continue;
+      if(!txt.toLowerCase().includes('branch name'))continue;
       allBranches=parseCsv(txt);
       const now=new Date();
       document.getElementById('as-of').textContent=`Live from Google Sheets · ${now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
-      render(allBranches);
+      renderAll(allBranches);
       return;
     }catch(e){continue;}
   }
-  document.getElementById('as-of').textContent='Could not reach sheet — showing embedded data (as of 26 May 2025)';
+  document.getElementById('as-of').textContent='Could not reach sheet — showing embedded fallback';
+  loadEmbedded();
 }
 
-loadEmbedded();
+// boot
+tryLiveRefresh();
 </script>
 </body>
 </html>
