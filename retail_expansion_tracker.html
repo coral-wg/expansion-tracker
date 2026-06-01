@@ -302,12 +302,17 @@ function parseCsv(text){
   for(let i=0;i<Math.min(10,lines.length);i++){
     if(lines[i].toLowerCase().includes('branch name')){headerIdx=i;break;}
   }
-  const headers=splitCsvLine(lines[headerIdx]);
+  let headers=splitCsvLine(lines[headerIdx]);
+  // Find which column index 'Branch Name' is in (may be offset by leading blank col)
+  const bnIdx=headers.findIndex(h=>h.toLowerCase().trim()==='branch name');
+  // If Branch Name is not at index 0, slice headers from that offset
+  if(bnIdx>0) headers=headers.slice(bnIdx);
   return lines.slice(headerIdx+1).map(line=>{
-    const cols=splitCsvLine(line);
+    let cols=splitCsvLine(line);
+    if(bnIdx>0) cols=cols.slice(bnIdx);
     const obj={};headers.forEach((h,i)=>obj[h]=cols[i]||'');
     return obj;
-  }).filter(r=>r['Branch Name']&&r['Branch Name'].trim());
+  }).filter(r=>r['Branch Name']&&r['Branch Name'].trim()&&r['Branch Name']!=='Branch Name');
 }
 
 function bc(s){const m={'Open':'b-open','Closed':'b-closed','Exploring':'b-exploring','Planned':'b-planned','Recce':'b-recce','Work Started':'b-work','Site Finalised':'b-site','On Hold':'b-hold','Dropped':'b-dropped','Token Paid':'b-token','Launch Ready':'b-launch'};return m[s]||'b-hold';}
