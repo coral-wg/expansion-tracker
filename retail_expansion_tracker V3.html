@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retail Expansion Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg-primary:#ffffff;--bg-secondary:#f5f5f3;--bg-tertiary:#eeede9;
+    --text-primary:#1a1a18;--text-secondary:#6b6b67;
+    --border:rgba(0,0,0,0.1);--border-md:rgba(0,0,0,0.18);
+    --radius-md:8px;--radius-lg:12px;
+    --blue:#185FA5;--green:#3B6D11;--amber:#854F0B;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{--bg-primary:#1e1e1c;--bg-secondary:#2a2a28;--bg-tertiary:#232321;
+    --text-primary:#f0efeb;--text-secondary:#9a9994;
+    --border:rgba(255,255,255,0.1);--border-md:rgba(255,255,255,0.18);
+    --blue:#85B7EB;--green:#97C459;--amber:#EF9F27;}
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg-tertiary);color:var(--text-primary);font-size:14px}
+  .page{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem}
+  .header h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .header p{font-size:12px;color:var(--text-secondary);margin-top:5px}
+  .refresh-btn{display:flex;align-items:center;gap:6px;font-size:13px;padding:7px 14px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-primary);cursor:pointer;color:var(--text-secondary)}
+  .refresh-btn:hover{background:var(--bg-secondary)}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.5rem}
+  .kpi{background:var(--bg-primary);border-radius:var(--radius-md);padding:14px 16px;border:0.5px solid var(--border)}
+  .kpi-label{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+  .kpi-value{font-size:28px;font-weight:600;line-height:1}
+  .kpi-sub{font-size:11px;color:var(--text-secondary);margin-top:4px}
+  .kpi.blue .kpi-value{color:var(--blue)}.kpi.green .kpi-value{color:var(--green)}.kpi.amber .kpi-value{color:var(--amber)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .card{background:var(--bg-primary);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem}
+  .card-title{font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:14px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.04em}
+  .region-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}
+  .region-name{width:95px;font-size:12px;flex-shrink:0}
+  .bar-wrap{flex:1;height:8px;background:var(--bg-secondary);border-radius:4px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px}
+  .region-open{width:28px;text-align:right;font-weight:600}
+  .region-pipe{width:28px;text-align:right;font-size:11px;color:var(--text-secondary)}
+  .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .status-chip{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--radius-md);font-size:13px}
+  .fy-wrap,.donut-wrap{position:relative;width:100%;height:180px}
+  .donut-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .filter-btn{font-size:12px;padding:4px 10px;border:0.5px solid var(--border-md);border-radius:20px;background:transparent;cursor:pointer;color:var(--text-secondary);transition:all .15s}
+  .filter-btn.active{background:#185FA5;color:#fff;border-color:#185FA5}
+  .search-wrap{position:relative;margin-bottom:10px}
+  .search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-size:15px}
+  .search-wrap input{width:100%;font-size:13px;padding:7px 12px 7px 32px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);outline:none}
+  .search-wrap input:focus{border-color:#185FA5}
+  .table-wrap{max-height:340px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius-md)}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  thead th{font-size:11px;color:var(--text-secondary);font-weight:600;padding:8px 10px;border-bottom:0.5px solid var(--border);text-align:left;position:sticky;top:0;background:var(--bg-primary);text-transform:uppercase;letter-spacing:.03em}
+  tbody td{padding:8px 10px;border-bottom:0.5px solid var(--border)}
+  tbody tr:hover td{background:var(--bg-secondary)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+  .b-open{background:#EAF3DE;color:#3B6D11}.b-closed{background:#FCEBEB;color:#A32D2D}
+  .b-exploring{background:#E6F1FB;color:#185FA5}.b-planned{background:#EEEDFE;color:#534AB7}
+  .b-recce{background:#FAEEDA;color:#854F0B}.b-work{background:#E1F5EE;color:#0F6E56}
+  .b-site{background:#FBEAF0;color:#993556}.b-hold{background:#F1EFE8;color:#5F5E5A}
+  .b-dropped{background:#FCEBEB;color:#793636}.b-token{background:#FAEEDA;color:#633806}
+  .b-launch{background:#EAF3DE;color:#27500A}
+  .live-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#3B6D11;background:#EAF3DE;padding:2px 8px;border-radius:10px;margin-left:8px}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:#3B6D11;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @media(max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <h1><i class="ti ti-building-store"></i> Retail Expansion Tracker <span class="live-tag"><span class="live-dot"></span>Live</span></h1>
+      <p id="as-of">Loading…</p>
+    </div>
+    <button class="refresh-btn" onclick="tryLiveRefresh()"><i class="ti ti-refresh"></i> Refresh from Sheet</button>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="two-col">
+    <div class="card"><div class="card-title"><i class="ti ti-map-pin"></i> Open branches by region</div><div id="region-bars"></div></div>
+    <div class="card"><div class="card-title"><i class="ti ti-stack"></i> Pipeline status breakdown</div><div class="status-grid" id="status-grid"></div></div>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title"><i class="ti ti-chart-bar"></i> Branches opened per fiscal year</div><div class="fy-wrap"><canvas id="fy-chart"></canvas></div></div>
+    <div class="card"><div class="card-title"><i class="ti ti-chart-donut"></i> Open branches by state</div><div class="donut-wrap"><canvas id="donut-chart"></canvas></div><div class="donut-legend" id="donut-legend"></div></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="card-title"><i class="ti ti-list"></i> Branch directory</div>
+    <div class="search-wrap"><i class="ti ti-search"></i><input type="text" id="search" placeholder="Search branch, region or state…" oninput="renderTable()"></div>
+    <div class="filter-bar" id="filter-bar"></div>
+    <div class="table-wrap"><table><thead><tr><th>Branch</th><th>Region</th><th>State</th><th>Status</th><th>FY</th><th>Opening date</th></tr></thead><tbody id="table-body"></tbody></table></div>
+  </div>
+</div>
+<script>
+// ── EMBEDDED DATA (as of 26 May 2025) ──────────────────────────────────────
+const EMBEDDED = [
+  {n:'INDIRANAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'22/05/2017'},
+  {n:'JALAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'30/05/2017'},
+  {n:'MALLESHWARAM',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'03/06/2017'},
+  {n:'K R PURAM',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'01/07/2017'},
+  {n:'BOMMANAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'18/09/2017'},
+  {n:'KENGERI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'23/11/2017'},
+  {n:'KATRIGUPPE',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2017-18',od:'02/12/2017'},
+  {n:'KL-EDAPPALLY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2018-19',od:'01/01/2019'},
+  {n:'KL-IRINJALAKUDA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2018-19',od:'01/01/2019'},
+  {n:'KL-THRISSUR',s:'Closed',r:'Kerala',st:'Kerala',fy:'FY 2018-19',od:''},
+  {n:'KL-MUVATTUPUZHA',s:'Closed',r:'Kerala',st:'Kerala',fy:'FY 2019-20',od:''},
+  {n:'KL-THOPPUMPADY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2019-20',od:'01/06/2019'},
+  {n:'KORAMANGALA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'30/06/2020'},
+  {n:'JAYANAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'05/10/2020'},
+  {n:'SUNKADAKATTE',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'21/10/2020'},
+  {n:'BASAWESHWARANAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'24/10/2020'},
+  {n:'LINGARAJPURAM',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2020-21',od:'15/03/2021'},
+  {n:'JP NAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2021-22',od:'28/08/2021'},
+  {n:'KL-CHAVAKKAD',s:'Closed',r:'Kerala',st:'Kerala',fy:'FY 2022-23',od:''},
+  {n:'KL-CHERTHALA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2022-23',od:'01/06/2022'},
+  {n:'KAIKONDRAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2022-23',od:'06/01/2023'},
+  {n:'HOSA ROAD',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2022-23',od:'23/03/2023'},
+  {n:'HOSAKOTE',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'13/04/2023'},
+  {n:'NAGARBHAVI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'26/07/2023'},
+  {n:'MARATHAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'28/07/2023'},
+  {n:'YELAHANKA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'04/08/2023'},
+  {n:'WHITE FIELD',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'26/10/2023'},
+  {n:'MATHIKERE',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'30/10/2023'},
+  {n:'UTTARAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2023-24',od:'14/03/2024'},
+  {n:'KOLAR',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2023-24',od:'23/03/2024'},
+  {n:'KODIGEHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'20/05/2024'},
+  {n:'MYSURU',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'29/05/2024'},
+  {n:'SARJAPURA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'21/06/2024'},
+  {n:'TC PALYA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'22/06/2024'},
+  {n:'TUMKUR',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'24/06/2024'},
+  {n:'VAJRAHALLI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'25/06/2024'},
+  {n:'HASSAN',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'06/08/2024'},
+  {n:'ULLAL',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'06/08/2024'},
+  {n:'THANISANDRA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'07/08/2024'},
+  {n:'CHIKMAGALURU',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'04/10/2024'},
+  {n:'MANGALORE',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'04/10/2024'},
+  {n:'ADUGODI',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2024-25',od:'05/10/2024'},
+  {n:'HUBLI',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'05/10/2024'},
+  {n:'DAVANAGERE',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'11/12/2024'},
+  {n:'SHIVAMOGGA',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'11/12/2024'},
+  {n:'DEVANAHALLI',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2024-25',od:'15/03/2025'},
+  {n:'UDUPI',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'02/04/2025'},
+  {n:'AP-VIJAYAWADA',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'07/05/2025'},
+  {n:'AP-GUNTUR',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'08/05/2025'},
+  {n:'AP-TIRUPATHI',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'30/05/2025'},
+  {n:'KL-CHAVAKKAD (New)',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'18/06/2025'},
+  {n:'TS-AS RAO NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'30/07/2025'},
+  {n:'TS-KUKATPALLY',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'30/07/2025'},
+  {n:'TS-PANJAGUTTA',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'30/07/2025'},
+  {n:'AP-RAMATALKIES',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'07/08/2025'},
+  {n:'AP-NAD',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'07/08/2025'},
+  {n:'AP-RAJAMAHENDRAVARAM',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'07/08/2025'},
+  {n:'Vellara Junction',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2025-26',od:'09/08/2025'},
+  {n:'KL-VENNALA-BY-PASS',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'22/08/2025'},
+  {n:'KL-PALA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'28/08/2025'},
+  {n:'MANDYA',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'30/08/2025'},
+  {n:'KL-THODUPUZHA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'30/08/2025'},
+  {n:'KL-THRIPPUNITHURA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'11/09/2025'},
+  {n:'KL-KOTTAYAM',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'18/09/2025'},
+  {n:'KL-THIRUVANANTHAPURAM MGROAD',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'20/09/2025'},
+  {n:'KL-KESHAVADASAPURAM',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'20/09/2025'},
+  {n:'KL-NEYATINKARA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'20/09/2025'},
+  {n:'KL-KAYAMKULAM',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'02/10/2025'},
+  {n:'KL-KARUNAGAPALLY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'02/10/2025'},
+  {n:'KL-KADAPPAKKADA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'02/10/2025'},
+  {n:'KL-ADOOR',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'04/10/2025'},
+  {n:'KL-Thiruvalla',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'04/10/2025'},
+  {n:'KL-Palakkad',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'06/10/2025'},
+  {n:'KL-Ottapalam',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'06/10/2025'},
+  {n:'TS-DILSUKH NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'11/10/2025'},
+  {n:'TS-HIMAYAT NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'11/10/2025'},
+  {n:'TS-TOLI CHOWKI',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'11/10/2025'},
+  {n:'BANNERGHATTA',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2025-26',od:'25/10/2025'},
+  {n:'SADASHIVA NAGAR',s:'Open',r:'Bengaluru',st:'Karnataka',fy:'FY 2025-26',od:'25/10/2025'},
+  {n:'CHITRADURGA',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'25/10/2025'},
+  {n:'KL-VARKALA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'29/10/2025'},
+  {n:'HOSPETE',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'07/11/2025'},
+  {n:'VIJAYAPURA',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'07/11/2025'},
+  {n:'BELAGAVI',s:'Open',r:'Rest of KA',st:'Karnataka',fy:'FY 2025-26',od:'28/11/2025'},
+  {n:'AP-Nellore',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'10/12/2025'},
+  {n:'AP-Ongole',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'10/12/2025'},
+  {n:'AP-KAKINADA',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'11/12/2025'},
+  {n:'AP-GAJUWAKA',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'12/12/2025'},
+  {n:'KL-VADAKARA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'16/12/2025'},
+  {n:'KL-KANNUR',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'17/12/2025'},
+  {n:'AP-ANANTAPUR',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'17/12/2025'},
+  {n:'AP-KURNOOL',s:'Open',r:'Andhra',st:'AP & Telangana',fy:'FY 2025-26',od:'17/12/2025'},
+  {n:'KL-PERINTHALMANNA',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'18/12/2025'},
+  {n:'KL-CALICUT',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'02/01/2026'},
+  {n:'TS-CHANDA NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'03/01/2026'},
+  {n:'TS-LB NAGAR',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2025-26',od:'03/01/2026'},
+  {n:'KL-THAMARASSERY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'03/01/2026'},
+  {n:'KL-MALAPPURAM',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'13/01/2026'},
+  {n:'KL-KOTTAKKAL',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'14/01/2026'},
+  {n:'KL-EDAPPAL',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'15/01/2026'},
+  {n:'KL-THRISSUR (new)',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'12/01/2026'},
+  {n:'KL-MUVATTUPUZHA (New)',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'23/02/2026'},
+  {n:'KL-KOYILANDY',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'25/02/2026'},
+  {n:'KL-Kanhangad',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'26/02/2026'},
+  {n:'KL-Tirur',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2025-26',od:'11/03/2026'},
+  {n:'KL-Kalpetta',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:'01/04/2026'},
+  {n:'KL-Cherthala (new)',s:'Open',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:'16/04/2026'},
+  {n:'Warrangal',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:'06/05/2026'},
+  {n:'Khammam',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:'18/05/2026'},
+  {n:'Nizamabad',s:'Open',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:'TBC'},
+  // Pipeline - Bengaluru
+  {n:'Attibele',s:'On Hold',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'E-City',s:'Recce',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Nelmangala',s:'Work Started',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Annekal',s:'On Hold',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Kanakapura',s:'Work Started',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Chikballapur',s:'Exploring',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Dodballapur',s:'Exploring',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'HSR Layout',s:'Recce',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Kadubeesanahalli',s:'Exploring',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Hennur Road',s:'Recce',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Vidyaranyapura',s:'Recce',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Tiptur',s:'Exploring',r:'Bengaluru',st:'Karnataka',fy:'FY 2026-27',od:''},
+  // Pipeline - Rest of KA
+  {n:'Gulbarga',s:'Site Finalised',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Raichur',s:'Site Finalised',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Bagalkote',s:'Token Paid',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Dharwad',s:'Work Started',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Karwar',s:'Planned',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Sirsi',s:'Dropped',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
+  {n:'Madikeri',s:'Dropped',r:'Rest of KA',st:'Karnataka',fy:'FY 2026-27',od:''},
+  // Pipeline - Kerala
+  {n:'Angamali',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Chalakudi',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Aluva',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Perimbavur',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Ernakulam - kadavanthara',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Ernakulam - Palarivattom Junction',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Attingel',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Kazhakootam',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Nedumangad',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Kottarakara',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Punalur',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Ranni',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Aluapuzha',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Mavelikara',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Changanassery',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Kattapana',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Pattambi',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  {n:'Manjeri',s:'Planned',r:'Kerala',st:'Kerala',fy:'FY 2026-27',od:''},
+  // Pipeline - Telangana
+  {n:'Karimnagar',s:'Recce',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:''},
+  {n:'Uppal hyderabad',s:'Planned',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:''},
+  {n:'Suchitra hyderabad',s:'Planned',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:''},
+  {n:'Mahabubnagar',s:'Planned',r:'Telangana',st:'AP & Telangana',fy:'FY 2026-27',od:''},
+  // Pipeline - Andhra Pradesh
+  {n:'Anakapalle',s:'Planned',r:'Andhra',st:'AP & Telangana',fy:'FY 2026-27',od:''},
+  {n:'Chittoor',s:'Site Finalised',r:'Andhra',st:'AP & Telangana',fy:'FY 2026-27',od:''},
+  {n:'Vijayawada 2',s:'Site Finalised',r:'Andhra',st:'AP & Telangana',fy:'FY 2026-27',od:''},
+  {n:'Vizianagaram',s:'Planned',r:'Andhra',st:'AP & Telangana',fy:'FY 2026-27',od:''},
+];
+
+function toRow(d){return{'Branch Name':d.n,'Status':d.s,'Region':d.r,'State':d.st,'Year':d.fy,'Opening date':d.od,'AOP planned':d.od};}
+
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTKctdrpAMEWN-mLwO88ULHmhRqv057F86H7AMtg105ioPU2jrjYjWSoldNnCG1hdPxx48QZ-K6npSU/pub?output=csv';
+let allBranches = [], activeFilter = 'All';
+let fyChart, donutChart;
+const RC = {'Bengaluru':'#378ADD','Rest of KA':'#1D9E75','Kerala':'#7F77DD','Andhra':'#D85A30','Telangana':'#BA7517','Tamil Nadu':'#888780'};
+const SS = {'Open':['#EAF3DE','#3B6D11'],'Closed':['#FCEBEB','#A32D2D'],'Exploring':['#E6F1FB','#185FA5'],'Planned':['#EEEDFE','#534AB7'],'Recce':['#FAEEDA','#854F0B'],'Work Started':['#E1F5EE','#0F6E56'],'Site Finalised':['#FBEAF0','#993556'],'On Hold':['#F1EFE8','#5F5E5A'],'Dropped':['#FCEBEB','#793636'],'Token Paid':['#FAEEDA','#633806'],'Launch Ready':['#EAF3DE','#27500A']};
+
+function parseCsv(text){
+  const lines=text.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(line=>{
+    const cols=[];let cur='',inQ=false;
+    for(const ch of line){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}
+    cols.push(cur.trim());
+    const obj={};headers.forEach((h,i)=>obj[h]=(cols[i]||'').replace(/^"|"$/g,''));
+    return obj;
+  }).filter(r=>r['Branch Name']&&r['Branch Name'].trim());
+}
+
+function bc(s){const m={'Open':'b-open','Closed':'b-closed','Exploring':'b-exploring','Planned':'b-planned','Recce':'b-recce','Work Started':'b-work','Site Finalised':'b-site','On Hold':'b-hold','Dropped':'b-dropped','Token Paid':'b-token','Launch Ready':'b-launch'};return m[s]||'b-hold';}
+
+function render(data){
+  const open=data.filter(d=>d.Status==='Open').length;
+  const pipe=data.filter(d=>!['Open','Closed',''].includes(d.Status)).length;
+  const closed=data.filter(d=>d.Status==='Closed').length;
+  const regions=new Set(data.filter(d=>d.Status==='Open').map(d=>d.Region)).size;
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi blue"><div class="kpi-label">Open branches</div><div class="kpi-value">${open}</div></div>
+    <div class="kpi green"><div class="kpi-label">Pipeline</div><div class="kpi-value">${pipe}</div><div class="kpi-sub">In progress</div></div>
+    <div class="kpi"><div class="kpi-label">Open + pipeline</div><div class="kpi-value">${open+pipe}</div></div>
+    <div class="kpi"><div class="kpi-label">Regions active</div><div class="kpi-value">${regions}</div></div>
+    <div class="kpi amber"><div class="kpi-label">Closed</div><div class="kpi-value">${closed}</div></div>`;
+  // Region bars
+  const od=data.filter(d=>d.Status==='Open'),pd=data.filter(d=>!['Open','Closed',''].includes(d.Status));
+  const regs=[...new Set(data.map(d=>d.Region).filter(Boolean))];
+  const cnt={};regs.forEach(r=>cnt[r]={o:0,p:0});
+  od.forEach(d=>{if(cnt[d.Region])cnt[d.Region].o++;});
+  pd.forEach(d=>{if(cnt[d.Region])cnt[d.Region].p++;});
+  const sorted=regs.filter(r=>cnt[r].o>0||cnt[r].p>0).sort((a,b)=>cnt[b].o-cnt[a].o);
+  const max=Math.max(...sorted.map(r=>cnt[r].o));
+  document.getElementById('region-bars').innerHTML=sorted.map(r=>`<div class="region-row"><span class="region-name">${r}</span><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(cnt[r].o/max*100)}%;background:${RC[r]||'#888'}"></div></div><span class="region-open">${cnt[r].o}</span><span class="region-pipe">+${cnt[r].p}</span></div>`).join('');
+  // Status grid
+  const pc=data.filter(d=>!['Open','Closed',''].includes(d.Status));
+  const sc={};pc.forEach(d=>{sc[d.Status]=(sc[d.Status]||0)+1;});
+  document.getElementById('status-grid').innerHTML=Object.entries(sc).sort((a,b)=>b[1]-a[1]).map(([s,n])=>{const[bg,fg]=SS[s]||['#eee','#333'];return`<div class="status-chip" style="background:${bg}"><span style="font-weight:500;color:${fg}">${s}</span><span style="font-weight:600;font-size:16px;color:${fg}">${n}</span></div>`;}).join('');
+  // FY chart
+  const fyc={};od.filter(d=>d.Year).forEach(d=>{fyc[d.Year]=(fyc[d.Year]||0)+1;});
+  const fyl=Object.keys(fyc).sort(),fyv=fyl.map(l=>fyc[l]);
+  if(fyChart)fyChart.destroy();
+  fyChart=new Chart(document.getElementById('fy-chart'),{type:'bar',data:{labels:fyl.map(l=>l.replace('FY ','')),datasets:[{label:'Branches',data:fyv,backgroundColor:'#378ADD',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:45},grid:{display:false}},y:{ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.1)'}}}}});
+  // Donut
+  const dc={};od.forEach(d=>{const s=d.State||'Other';dc[s]=(dc[s]||0)+1;});
+  const dl=Object.keys(dc).sort((a,b)=>dc[b]-dc[a]),dv=dl.map(l=>dc[l]);
+  const colors=['#378ADD','#7F77DD','#1D9E75','#D85A30','#BA7517','#888780'];
+  if(donutChart)donutChart.destroy();
+  donutChart=new Chart(document.getElementById('donut-chart'),{type:'doughnut',data:{labels:dl,datasets:[{data:dv,backgroundColor:colors.slice(0,dl.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'60%'}});
+  document.getElementById('donut-legend').innerHTML=dl.map((l,i)=>`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary)"><span style="width:8px;height:8px;border-radius:2px;background:${colors[i]||'#ccc'};display:inline-block"></span>${l} <strong>${dv[i]}</strong></span>`).join('');
+  // Filters
+  const ps=[...new Set(data.filter(d=>!['Open','Closed',''].includes(d.Status)).map(d=>d.Status))];
+  const statuses=['All','Open',...ps,'Closed'];
+  document.getElementById('filter-bar').innerHTML=statuses.map(s=>`<button class="filter-btn${activeFilter===s?' active':''}" onclick="setFilter('${s}')">${s}</button>`).join('');
+  renderTable();
+}
+
+function setFilter(f){activeFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.textContent===f));renderTable();}
+
+function renderTable(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const rows=allBranches.filter(d=>{
+    const ms=activeFilter==='All'||d.Status===activeFilter;
+    const mq=!q||d['Branch Name'].toLowerCase().includes(q)||(d.Region||'').toLowerCase().includes(q)||(d.State||'').toLowerCase().includes(q);
+    return ms&&mq;
+  });
+  document.getElementById('table-body').innerHTML=rows.map(d=>`<tr><td style="font-weight:500">${d['Branch Name']}</td><td>${d.Region||'—'}</td><td>${d.State||'—'}</td><td><span class="badge ${bc(d.Status)}">${d.Status||'—'}</span></td><td>${d.Year||'—'}</td><td>${d['Opening date']||d['AOP planned']||'—'}</td></tr>`).join('');
+}
+
+function loadEmbedded(){
+  allBranches=EMBEDDED.map(toRow);
+  document.getElementById('as-of').textContent='Data as of 26 May 2025 · Click "Refresh from Sheet" for live data';
+  render(allBranches);
+}
+
+async function tryLiveRefresh(){
+  document.getElementById('as-of').textContent='Fetching live data…';
+  const proxies=[
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(CSV_URL)}`,
+    `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`,
+    `https://thingproxy.freeboard.io/fetch/${CSV_URL}`
+  ];
+  for(const proxy of proxies){
+    try{
+      const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+      if(!r.ok)continue;
+      const txt=await r.text();
+      if(!txt.includes('Branch Name'))continue;
+      allBranches=parseCsv(txt);
+      const now=new Date();
+      document.getElementById('as-of').textContent=`Live from Google Sheets · ${now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+      render(allBranches);
+      return;
+    }catch(e){continue;}
+  }
+  document.getElementById('as-of').textContent='Could not reach sheet — showing embedded data (as of 26 May 2025)';
+}
+
+loadEmbedded();
+</script>
+</body>
+</html>
