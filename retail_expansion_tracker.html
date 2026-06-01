@@ -289,14 +289,23 @@ let fyChart, donutChart;
 const RC = {'Bengaluru':'#378ADD','Rest of KA':'#1D9E75','Kerala':'#7F77DD','Andhra':'#D85A30','Telangana':'#BA7517','Tamil Nadu':'#888780'};
 const SS = {'Open':['#EAF3DE','#3B6D11'],'Closed':['#FCEBEB','#A32D2D'],'Exploring':['#E6F1FB','#185FA5'],'Planned':['#EEEDFE','#534AB7'],'Recce':['#FAEEDA','#854F0B'],'Work Started':['#E1F5EE','#0F6E56'],'Site Finalised':['#FBEAF0','#993556'],'On Hold':['#F1EFE8','#5F5E5A'],'Dropped':['#FCEBEB','#793636'],'Token Paid':['#FAEEDA','#633806'],'Launch Ready':['#EAF3DE','#27500A']};
 
+function splitCsvLine(line){
+  const cols=[];let cur='',inQ=false;
+  for(const ch of line){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}
+  cols.push(cur.trim());
+  return cols.map(c=>c.replace(/^"|"$/g,'').trim());
+}
 function parseCsv(text){
   const lines=text.trim().split('\n');
-  const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
-  return lines.slice(1).map(line=>{
-    const cols=[];let cur='',inQ=false;
-    for(const ch of line){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}
-    cols.push(cur.trim());
-    const obj={};headers.forEach((h,i)=>obj[h]=(cols[i]||'').replace(/^"|"$/g,''));
+  // Find header row - look for row containing 'Branch Name'
+  let headerIdx=0;
+  for(let i=0;i<Math.min(10,lines.length);i++){
+    if(lines[i].toLowerCase().includes('branch name')){headerIdx=i;break;}
+  }
+  const headers=splitCsvLine(lines[headerIdx]);
+  return lines.slice(headerIdx+1).map(line=>{
+    const cols=splitCsvLine(line);
+    const obj={};headers.forEach((h,i)=>obj[h]=cols[i]||'');
     return obj;
   }).filter(r=>r['Branch Name']&&r['Branch Name'].trim());
 }
