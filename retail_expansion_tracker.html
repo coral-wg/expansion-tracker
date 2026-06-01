@@ -79,7 +79,26 @@
       <h1><i class="ti ti-building-store"></i> Retail Expansion Tracker <span class="live-tag"><span class="live-dot"></span>Live</span></h1>
       <p id="as-of">Loading…</p>
     </div>
-    <button class="refresh-btn" onclick="tryLiveRefresh()"><i class="ti ti-refresh"></i> Refresh from Sheet</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="refresh-btn" onclick="tryLiveRefresh()"><i class="ti ti-refresh"></i> Refresh from Sheet</button>
+      <button class="refresh-btn" onclick="document.getElementById('paste-modal').style.display='flex'" title="Paste CSV manually"><i class="ti ti-clipboard-data"></i> Paste CSV</button>
+    </div>
+  </div>
+
+  <!-- Paste CSV modal -->
+  <div id="paste-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center">
+    <div style="background:var(--bg-primary);border-radius:var(--radius-lg);padding:1.5rem;width:560px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h3 style="font-size:15px;font-weight:600">Paste CSV data</h3>
+        <button onclick="document.getElementById('paste-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-secondary)">×</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">In Google Sheets: <strong>File → Download → CSV</strong>, open the file in Notepad, select all (Ctrl+A), copy, and paste below.</p>
+      <textarea id="csv-paste" placeholder="Paste CSV content here…" style="width:100%;height:180px;font-size:11px;font-family:monospace;padding:8px;border:0.5px solid var(--border-md);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);resize:vertical"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
+        <button onclick="document.getElementById('paste-modal').style.display='none'" class="refresh-btn">Cancel</button>
+        <button onclick="loadFromPaste()" style="padding:7px 16px;background:#185FA5;color:#fff;border:none;border-radius:var(--radius-md);font-size:13px;cursor:pointer;font-weight:500">Load data</button>
+      </div>
+    </div>
   </div>
   <div class="kpis" id="kpis"></div>
   <div class="two-col">
@@ -264,7 +283,7 @@ const EMBEDDED = [
 
 function toRow(d){return{'Branch Name':d.n,'Status':d.s,'Region':d.r,'State':d.st,'Year':d.fy,'Opening date':d.od,'AOP planned':d.od};}
 
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTKctdrpAMEWN-mLwO88ULHmhRqv057F86H7AMtg105ioPU2jrjYjWSoldNnCG1hdPxx48QZ-K6npSU/pub?output=csv';
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTKctdrpAMEWN-mLwO88ULHmhRqv057F86H7AMtg105ioPU2jrjYjWSoldNnCG1hdPxx48QZ-K6npSU/pub?gid=0&single=true&output=csv';
 let allBranches = [], activeFilter = 'All';
 let fyChart, donutChart;
 const RC = {'Bengaluru':'#378ADD','Rest of KA':'#1D9E75','Kerala':'#7F77DD','Andhra':'#D85A30','Telangana':'#BA7517','Tamil Nadu':'#888780'};
@@ -339,6 +358,21 @@ function renderTable(){
   document.getElementById('table-body').innerHTML=rows.map(d=>`<tr><td style="font-weight:500">${d['Branch Name']}</td><td>${d.Region||'—'}</td><td>${d.State||'—'}</td><td><span class="badge ${bc(d.Status)}">${d.Status||'—'}</span></td><td>${d.Year||'—'}</td><td>${d['Opening date']||d['AOP planned']||'—'}</td></tr>`).join('');
 }
 
+function loadFromPaste(){
+  const txt = document.getElementById('csv-paste').value.trim();
+  if(!txt){alert('Please paste some CSV content first.');return;}
+  try{
+    const parsed = parseCsv(txt);
+    if(!parsed.length || !parsed[0]['Branch Name']){alert('Could not read the CSV — make sure you copied from the Branch Roll out sheet.');return;}
+    allBranches = parsed;
+    const now = new Date();
+    document.getElementById('as-of').textContent = `Updated from pasted CSV · ${now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+    document.getElementById('paste-modal').style.display = 'none';
+    document.getElementById('csv-paste').value = '';
+    render(allBranches);
+  }catch(e){alert('Error reading CSV: '+e.message);}
+}
+
 function loadEmbedded(){
   allBranches=EMBEDDED.map(toRow);
   document.getElementById('as-of').textContent='Data as of 26 May 2025 · Click "Refresh from Sheet" for live data';
@@ -347,10 +381,12 @@ function loadEmbedded(){
 
 async function tryLiveRefresh(){
   document.getElementById('as-of').textContent='Fetching live data…';
+  const encoded = encodeURIComponent(CSV_URL);
   const proxies=[
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(CSV_URL)}`,
-    `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`,
-    `https://thingproxy.freeboard.io/fetch/${CSV_URL}`
+    `https://corsproxy.io/?url=${encoded}`,
+    `https://api.allorigins.win/raw?url=${encoded}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encoded}`,
+    `https://proxy.cors.sh/${CSV_URL}`,
   ];
   for(const proxy of proxies){
     try{
