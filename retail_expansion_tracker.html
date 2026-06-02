@@ -182,15 +182,10 @@
     .header h1{font-size:17px}
     .header{flex-direction:row;align-items:center;gap:0.5rem}
 
-    /* Scorecard: stack into 2×2 with equation signs between */
-    .kpis{display:grid;grid-template-columns:1fr auto 1fr;grid-template-rows:auto auto;gap:6px;align-items:center}
-    .kpis .kpi:nth-child(1){grid-column:1;grid-row:1}   /* Open Today */
+    /* Scorecard: clean 2×2 grid, no operators */
+    .kpis{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:8px;align-items:stretch}
     .kpi-sep{display:none}
-    .kpis .kpi:nth-child(3){grid-column:1;grid-row:2}   /* AOP Target */
-    .kpi-eq:nth-of-type(1){grid-column:2;grid-row:1;font-size:16px;padding:0 4px}  /* = */
-    .kpis .kpi:nth-child(5){grid-column:3;grid-row:1}   /* Active Pipeline */
-    .kpi-eq:nth-of-type(2){grid-column:2;grid-row:2;font-size:16px;padding:0 4px}  /* + */
-    .kpis .kpi:nth-child(7){grid-column:3;grid-row:2}   /* Gap to AOP */
+    .kpi-eq{display:none}
 
     .kpi{padding:11px 12px}
     .kpi-value{font-size:22px}
