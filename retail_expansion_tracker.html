@@ -118,6 +118,12 @@
   .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
   .filter-btn{font-size:11px;padding:4px 10px;border:0.5px solid var(--border-md);border-radius:20px;background:transparent;cursor:pointer;color:var(--muted)}
   .filter-btn.active{background:var(--blr);color:#fff;border-color:var(--blr)}
+  .filter-section-label{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:0.05em;font-weight:500;margin-bottom:5px;margin-top:2px}
+  .region-btn{font-size:11px;padding:4px 10px;border:0.5px solid var(--border-md);border-radius:20px;background:transparent;cursor:pointer;color:var(--muted);display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+  .region-btn .rdot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+  .region-btn.active{color:var(--text);border-color:currentColor;background:var(--card-2);font-weight:500}
+  .dir-filters{margin-bottom:10px;display:flex;flex-direction:column;gap:6px}
+  .dir-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .table-wrap{max-height:360px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius)}
   table{width:100%;border-collapse:collapse;font-size:12px}
   thead th{font-size:10px;color:var(--muted);font-weight:600;padding:9px 11px;border-bottom:0.5px solid var(--border);text-align:left;position:sticky;top:0;background:var(--card);text-transform:uppercase;letter-spacing:0.04em;z-index:1}
@@ -272,8 +278,17 @@
   <!-- Directory -->
   <div class="card">
     <div class="card-head"><div><h2>Branch Directory</h2><div class="card-subtitle"><span id="dir-count">All</span> branches</div></div></div>
-    <div class="search-wrap"><i class="ti ti-search"></i><input type="text" id="search" placeholder="Search branch, region or state…" oninput="renderTable()"></div>
-    <div class="filter-bar" id="filter-bar"></div>
+    <div class="search-wrap"><i class="ti ti-search"></i><input type="text" id="search" placeholder="Search branch or state…" oninput="renderTable()"></div>
+    <div class="dir-filters">
+      <div>
+        <div class="filter-section-label">Region — multi-select</div>
+        <div class="dir-row" id="region-filter-bar"></div>
+      </div>
+      <div>
+        <div class="filter-section-label">Status — single select</div>
+        <div class="dir-row" id="filter-bar"></div>
+      </div>
+    </div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Branch</th><th>Region</th><th>Priority</th><th>Status</th><th>FY</th><th>Opening</th></tr></thead>
@@ -300,7 +315,7 @@ const OFF_FUNNEL = ['On Hold','Dropped','Closed'];
 const TARGET_FY = 'FY 2026-27';
 const CURRENT_FY = 'FY 2025-26';
 
-let allBranches=[], activeFilter='All', activePrio='All';
+let allBranches=[], activeFilter='All', activePrio='All', activeRegions=new Set();
 
 // ── EMBEDDED FALLBACK (priority included) ──────────────────────────────────
 const EMBEDDED = [
@@ -330,7 +345,7 @@ function parseCsv(text){
     if(bnIdx>0) cols=cols.slice(bnIdx);
     const obj={};headers.forEach((h,i)=>obj[h]=cols[i]||'');
     return obj;
-  }).filter(r=>r['Branch Name']&&r['Branch Name'].trim()&&r['Branch Name']!=='Branch Name');
+  }).filter(r=>r['Branch Name']&&r['Branch Name'].trim()&&r['Branch Name']!=='Branch Name'&&r['Status']&&r['Status'].trim());
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
@@ -472,20 +487,39 @@ function renderAttention(data){
 
 // ── DIRECTORY ──────────────────────────────────────────────────────────────
 function renderFilters(data){
+  // Status filter
   const pipeS=[...new Set(data.filter(d=>FUNNEL_STAGES.includes(d.Status)).map(d=>d.Status))]
     .sort((a,b)=>FUNNEL_STAGES.indexOf(a)-FUNNEL_STAGES.indexOf(b));
   const statuses=['All','Open',...pipeS,...OFF_FUNNEL];
   document.getElementById('filter-bar').innerHTML=statuses.map(s=>
     `<button class="filter-btn${activeFilter===s?' active':''}" onclick="setFilter('${s}')">${s}</button>`
   ).join('');
+  // Region filter — multi-select
+  const allRegions=AOP_REGIONS;
+  document.getElementById('region-filter-bar').innerHTML=
+    `<button class="region-btn${activeRegions.size===0?' active':''}" onclick="clearRegions()">All regions</button>`+
+    allRegions.map(r=>{
+      const active=activeRegions.has(r);
+      const col=REGION_COLORS[r]||'#888';
+      return `<button class="region-btn${active?' active':''}" onclick="toggleRegion('${r}')" style="${active?'border-color:'+col+';color:'+col:''}">
+        <span class="rdot" style="background:${col}"></span>${r}
+      </button>`;
+    }).join('');
 }
 function setFilter(f){activeFilter=f;renderFilters(allBranches);renderTable();}
+function toggleRegion(r){
+  if(activeRegions.has(r))activeRegions.delete(r);
+  else activeRegions.add(r);
+  renderFilters(allBranches);renderTable();
+}
+function clearRegions(){activeRegions.clear();renderFilters(allBranches);renderTable();}
 function renderTable(){
   const q=(document.getElementById('search').value||'').toLowerCase();
   const rows=allBranches.filter(d=>{
     const ms=activeFilter==='All'||d.Status===activeFilter;
-    const mq=!q||d['Branch Name'].toLowerCase().includes(q)||(d.Region||'').toLowerCase().includes(q)||(d.State||'').toLowerCase().includes(q);
-    return ms&&mq;
+    const mr=activeRegions.size===0||activeRegions.has(aopRegion(d));
+    const mq=!q||d['Branch Name'].toLowerCase().includes(q)||(d.State||'').toLowerCase().includes(q);
+    return ms&&mr&&mq;
   });
   document.getElementById('dir-count').textContent=`${rows.length} of ${allBranches.length}`;
   document.getElementById('table-body').innerHTML=rows.map(d=>{
