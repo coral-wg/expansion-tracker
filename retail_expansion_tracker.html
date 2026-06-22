@@ -561,29 +561,20 @@ function loadEmbedded(){
 }
 async function tryLiveRefresh(){
   document.getElementById('as-of').textContent='Fetching live data…';
-  const encoded=encodeURIComponent(CSV_URL);
-  const proxies=[
-    `https://api.allorigins.win/raw?url=${encoded}`,
-    `https://thingproxy.freeboard.io/fetch/${CSV_URL}`,
-    `https://corsproxy.io/?url=${encoded}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encoded}`,
-    `https://crossorigin.me/${CSV_URL}`,
-  ];
-  for(const proxy of proxies){
-    try{
-      const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-      if(!r.ok)continue;
-      const txt=await r.text();
-      if(!txt.toLowerCase().includes('branch name'))continue;
-      allBranches=parseCsv(txt);
-      const now=new Date();
-      document.getElementById('as-of').textContent=`Live from Google Sheets · ${now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
-      renderAll(allBranches);
-      return;
-    }catch(e){continue;}
+  try{
+    const r=await fetch('https://script.google.com/macros/s/AKfycbz-SdB4_VkV5hE26T5XOMb2BmWf3s4c5AC4CPWiju17ds_zWB01yTyHjfEQlLnWFFBdBw/exec',{signal:AbortSignal.timeout(10000)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const json=await r.json();
+    if(!json.data||!json.data.length)throw new Error('Empty data');
+    allBranches=json.data;
+    const now=new Date();
+    document.getElementById('as-of').textContent=`Live from Google Sheets · ${now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+    renderAll(allBranches);
+  }catch(e){
+    console.error('Apps Script fetch failed:',e);
+    document.getElementById('as-of').textContent='Could not reach sheet — showing embedded fallback';
+    loadEmbedded();
   }
-  document.getElementById('as-of').textContent='Could not reach sheet — showing embedded fallback';
-  loadEmbedded();
 }
 
 // boot
